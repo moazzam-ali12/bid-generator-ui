@@ -1,477 +1,626 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Northlake Bid Generator</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Project Inspection and Testing Summary — Paige Engineering</title>
+<style>
+  :root {
+    --orange:  #D4721A;
+    --navy:    #1e3347;
+    --navy2:   #2d4155;
+    --bg:      #f4f6f9;
+    --card:    #ffffff;
+    --text:    #1e2a38;
+    --muted:   #6b7a8d;
+    --border:  #dde3ec;
+    --success: #2e7d50;
+    --danger:  #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--text);
+  }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+  /* ── Header ── */
+  header {
+    background: var(--navy);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: 74px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.3);
+  }
+  .logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-right: 1px solid rgba(255,255,255,.15);
+    padding-right: 20px;
+  }
+  /* Logo image — swap src to your actual logo file path */
+  .logo-wrap img {
+    height: 42px;
+    width: auto;
+    object-fit: contain;
+    mix-blend-mode: screen; /* removes black background, keeps orange + text colors */
+  }
+  /* Fallback text logo shown if image fails */
+  .logo-text {
+    display: none;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+  .logo-text .top { color: #fff; font-size: 1.25rem; font-weight: 800; letter-spacing: .02em; }
+  .logo-text .bot { color: var(--orange); font-size: .65rem; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; }
+  .header-divider { flex: 0 0 1px; }
+  .header-info h1 { color: #fff; font-size: 1rem; font-weight: 600; }
+  .header-info p  { color: #8aaabf; font-size: .75rem; margin-top: 2px; }
+  .api-status {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 7px;
+    font-size: .75rem; color: #8aaabf;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); flex-shrink: 0; transition: background .4s; }
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
-            width: 100%;
-            padding: 40px;
-            animation: slideUp 0.5s ease-out;
-        }
+  /* ── Layout ── */
+  main { max-width: 740px; margin: 0 auto; padding: 32px 20px 60px; }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 22px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    animation: fadeUp .3s ease both;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+  .card-title {
+    font-size: .8rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .07em;
+    color: var(--navy); margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--orange);
+  }
 
-        .header h1 {
-            color: #2d3748;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
+  /* ── Fields ── */
+  label { display: block; font-size: .8rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; letter-spacing: .03em; text-transform: uppercase; }
+  input[type="text"] {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: .95rem; color: var(--text);
+    transition: border-color .2s;
+  }
+  input[type="text"]:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(212,114,26,.1); }
 
-        .header p {
-            color: #718096;
-            font-size: 16px;
-        }
+  /* ── Drop Zone ── */
+  #uploadArea {
+    border: 2.5px dashed var(--border);
+    border-radius: 10px; padding: 44px 24px;
+    text-align: center; cursor: pointer;
+    background: #fafbfc;
+    transition: border-color .2s, background .2s;
+    margin-top: 18px;
+  }
+  #uploadArea:hover, #uploadArea.dragover {
+    border-color: var(--orange); background: #fdf4eb;
+  }
+  #uploadArea .icon { font-size: 40px; margin-bottom: 12px; }
+  #uploadArea p { color: var(--muted); font-size: .93rem; }
+  #uploadArea strong { color: var(--navy); }
+  #uploadArea .hint { font-size: .79rem; margin-top: 6px; color: #a0aec0; }
+  #fileInput { display: none; }
 
-        .form-group {
-            margin-bottom: 30px;
-        }
+  /* ── File List ── */
+  .file-list { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .file-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg); border-radius: 8px;
+    padding: 9px 13px; font-size: .87rem;
+    animation: fadeUp .2s ease both;
+  }
+  .file-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  .file-item-remove {
+    background: none; border: 1px solid var(--border);
+    cursor: pointer; color: var(--muted);
+    border-radius: 5px; padding: 3px 10px; font-size: .8rem;
+    transition: all .15s;
+  }
+  .file-item-remove:hover { color: var(--danger); border-color: var(--danger); background: #fdecea; }
 
-        .form-group label {
-            display: block;
-            color: #2d3748;
-            font-weight: 600;
-            margin-bottom: 10px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+  /* ── Progress ── */
+  #progressWrap { display: none; margin-top: 18px; }
+  .prog-bg { background: var(--border); border-radius: 99px; height: 7px; overflow: hidden; }
+  .prog-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--navy), var(--orange));
+    transition: width .5s ease; width: 0%;
+  }
+  #progressLabel { font-size: .8rem; color: var(--muted); margin-top: 7px; }
 
-        .form-group input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
+  /* ── Banners ── */
+  .banner {
+    border-radius: 8px; padding: 12px 16px;
+    font-size: .87rem; font-weight: 500;
+    display: none; margin-top: 16px;
+    align-items: center; gap: 10px;
+  }
+  .banner.success { background: #e8f5ed; color: var(--success); border: 1px solid #b3dcc3; display: flex; }
+  .banner.error   { background: #fdecea; color: var(--danger); border: 1px solid #f5b8b3; display: flex; }
 
-        .form-group input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 26px; border-radius: 8px;
+    font-size: .92rem; font-weight: 600; cursor: pointer;
+    border: none; transition: all .2s; letter-spacing: .02em;
+  }
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--navy2); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(30,51,71,.3); }
+  .btn-primary:disabled { background: #8fa5be; cursor: not-allowed; }
+  .btn-accent  { background: var(--orange); color: #fff; }
+  .btn-accent:hover:not(:disabled) { background: #b8611a; transform: translateY(-1px); }
+  .btn-accent:disabled { opacity: .55; cursor: not-allowed; }
+  .btn-outline { background: #fff; color: var(--navy); border: 1.5px solid var(--navy); }
+  .btn-outline:hover { background: var(--navy); color: #fff; }
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
 
-        .upload-area {
-            border: 3px dashed #cbd5e0;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #f7fafc;
-        }
+  /* ── Chat Section ── */
+  #chatSection { display: none; }
+  .ref-badge {
+    margin-left: auto; border-radius: 99px; padding: 3px 13px;
+    font-size: .75rem; font-weight: 700;
+    background: #fff3e0; color: var(--orange); border: 1px solid var(--orange);
+  }
+  .ref-badge.low { color: var(--danger); border-color: var(--danger); background: #fdecea; }
 
-        .upload-area:hover {
-            border-color: #667eea;
-            background: #edf2f7;
-        }
+  #chatMessages {
+    max-height: 300px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+    margin-bottom: 14px; padding: 2px;
+  }
+  .msg {
+    border-radius: 10px; padding: 11px 15px;
+    font-size: .88rem; line-height: 1.55; max-width: 88%;
+  }
+  .msg .lbl { font-size: .7rem; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; color: var(--muted); }
+  .msg.user { background: #fff3e0; align-self: flex-end; border: 1px solid #f5d5a8; }
+  .msg.ai   { background: #f0f4f8; align-self: flex-start; border: 1px solid var(--border); }
 
-        .upload-area.dragover {
-            border-color: #667eea;
-            background: #e6f2ff;
-            transform: scale(1.02);
-        }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 13px; }
+  .chip {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 99px; padding: 5px 13px;
+    font-size: .78rem; color: var(--navy); cursor: pointer;
+    transition: all .15s;
+  }
+  .chip:hover { background: var(--orange); color: #fff; border-color: var(--orange); }
 
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
+  .chat-row { display: flex; gap: 10px; }
+  #chatInput {
+    flex: 1; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 10px 13px; font-size: .9rem; resize: none; font-family: inherit; color: var(--text);
+  }
+  #chatInput:focus { outline: none; border-color: var(--orange); }
+  #chatInput:disabled { background: var(--bg); color: var(--muted); }
 
-        .upload-area p {
-            color: #4a5568;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
+  /* ── Download ── */
+  #downloadSection { display: none; }
+  .dl-card {
+    background: linear-gradient(135deg, var(--navy), var(--navy2));
+    color: #fff; border-radius: 14px; padding: 24px 28px;
+    display: flex; align-items: center; gap: 20px;
+    border-left: 5px solid var(--orange);
+  }
+  .dl-icon { font-size: 2.4rem; flex-shrink: 0; }
+  .dl-info h3 { font-size: 1rem; margin-bottom: 4px; }
+  .dl-info p  { font-size: .82rem; color: #8aaabf; margin-bottom: 12px; }
 
-        .upload-area .hint {
-            color: #a0aec0;
-            font-size: 14px;
-        }
+  /* ── Spinner ── */
+  .spin {
+    display: inline-block; width: 15px; height: 15px;
+    border: 2.5px solid rgba(255,255,255,.3); border-top-color: #fff;
+    border-radius: 50%; animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-        #fileInput {
-            display: none;
-        }
-
-        .file-list {
-            margin-top: 20px;
-        }
-
-        .file-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 15px;
-            background: #f7fafc;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .file-item-name {
-            color: #2d3748;
-            font-size: 14px;
-            flex: 1;
-            display: flex;
-            align-items: center;
-        }
-
-        .file-item-name::before {
-            content: "📄";
-            margin-right: 10px;
-        }
-
-        .file-item-remove {
-            background: #fc8181;
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .file-item-remove:hover {
-            background: #f56565;
-            transform: scale(1.05);
-        }
-
-        .btn-generate {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 30px;
-        }
-
-        .btn-generate:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-generate:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-        }
-
-        .loader {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .loader.active {
-            display: block;
-        }
-
-        .spinner {
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loader p {
-            color: #4a5568;
-            font-size: 14px;
-        }
-
-        .success-message {
-            display: none;
-            background: #48bb78;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            margin-top: 20px;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .success-message.active {
-            display: block;
-        }
-
-        .error-message {
-            display: none;
-            background: #f56565;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            margin-top: 20px;
-            animation: slideDown 0.3s ease;
-        }
-
-        .error-message.active {
-            display: block;
-        }
-    </style>
+  /* ── Loader (original style, kept) ── */
+  .loader { display: none; text-align: center; margin-top: 20px; }
+  .loader.active { display: block; }
+  .spinner-lg {
+    border: 4px solid #f3f4f6; border-top: 4px solid var(--orange);
+    border-radius: 50%; width: 40px; height: 40px;
+    animation: spin 1s linear infinite; margin: 0 auto 12px;
+  }
+  .loader p { color: var(--muted); font-size: .87rem; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🏗️ Northlake Bid Generator</h1>
-            <p>Upload your bid documents and generate structured Excel reports</p>
-        </div>
 
-        <form id="bidForm">
-            <div class="form-group">
-                <label for="projectName">Project Name</label>
-                <input 
-                    type="text" 
-                    id="projectName" 
-                    name="projectName" 
-                    value="Northlake 7-Eleven"
-                    required
-                    placeholder="Enter project name"
-                >
-            </div>
+<header>
+  <div class="logo-wrap">
+    <!-- Save your logo as paige-logo.png next to index.html -->
+    <img src="paige-logo.png" alt="Paige Engineering"
+         onerror="this.style.display='none'; document.querySelector('.logo-text').style.display='flex'"/>
+    <div class="logo-text">
+      <span class="top">PAIGE</span>
+      <span class="bot">Engineering</span>
+    </div>
+  </div>
+  <div class="header-info">
+    <h1>Project Inspection and Testing Summary</h1>
+    <p>Automated Bid Document Processor — powered by AI</p>
+  </div>
+  <div class="api-status">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">Checking API…</span>
+  </div>
+</header>
 
-            <div class="form-group">
-                <label>Upload Documents</label>
-                <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">📁</div>
-                    <p><strong>Click to upload</strong> or drag and drop</p>
-                    <p class="hint">PDF, DOCX, or TXT files (Multiple files supported)</p>
-                </div>
-                <input 
-                    type="file" 
-                    id="fileInput" 
-                    name="files" 
-                    multiple 
-                    accept=".pdf,.docx,.txt"
-                >
-            </div>
+<main>
 
-            <div class="file-list" id="fileList"></div>
+  <!-- Upload Card -->
+  <div class="card">
+    <div class="card-title">📁 Upload Bid Documents</div>
 
-            <button type="submit" class="btn-generate" id="generateBtn" disabled>
-                Generate Excel Report
-            </button>
-        </form>
-
-        <div class="loader" id="loader">
-            <div class="spinner"></div>
-            <p>Processing your documents... This may take a minute.</p>
-        </div>
-
-        <div class="success-message" id="successMessage">
-            ✅ Excel report generated successfully! Your download should start automatically.
-        </div>
-
-        <div class="error-message" id="errorMessage"></div>
+    <div>
+      <label for="projectName">Project Name</label>
+      <input type="text" id="projectName" value="Northlake Project" placeholder="e.g. 7-Eleven Westfield"/>
     </div>
 
-    <script>
-        const API_URL = 'https://northlake-bid-api-g6amfyhed4gucyff.canadacentral-01.azurewebsites.net/generate-bid-excel';
-        
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const fileList = document.getElementById('fileList');
-        const generateBtn = document.getElementById('generateBtn');
-        const bidForm = document.getElementById('bidForm');
-        const loader = document.getElementById('loader');
-        const successMessage = document.getElementById('successMessage');
-        const errorMessage = document.getElementById('errorMessage');
-        
-        let selectedFiles = [];
+    <div id="uploadArea">
+      <div class="icon">📂</div>
+      <p><strong>Click to upload</strong> or drag and drop</p>
+      <p class="hint">PDF, DOCX, TXT — multiple files supported</p>
+    </div>
+    <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt"/>
 
-        // Click to upload
-        uploadArea.addEventListener('click', () => fileInput.click());
+    <div class="file-list" id="fileList"></div>
 
-        // File input change
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
+    <div id="progressWrap">
+      <div class="prog-bg"><div class="prog-fill" id="progFill"></div></div>
+      <div id="progressLabel">Preparing…</div>
+    </div>
+    <div class="banner" id="statusBanner"></div>
 
-        // Drag and drop
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
+    <div class="loader" id="loader">
+      <div class="spinner-lg"></div>
+      <p id="loaderText">Processing your documents… This may take a minute.</p>
+    </div>
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
+    <div class="btn-row">
+      <button class="btn btn-primary" id="generateBtn" disabled onclick="handleGenerate()">
+        ⚡ Generate Report
+      </button>
+      <button class="btn btn-outline" onclick="clearAll()">Clear</button>
+    </div>
+  </div>
 
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
-        });
+  <!-- Chat Refinement -->
+  <div class="card" id="chatSection">
+    <div class="card-title">
+      💬 Refine Extraction
+      <span class="ref-badge" id="refBadge">3 refinements remaining</span>
+    </div>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px;">
+      Tell the AI what to fix, re-check, or add. It will update the extraction and regenerate your Excel file.
+    </p>
 
-        function handleFiles(files) {
-            const validExtensions = ['.pdf', '.docx', '.txt'];
-            
-            Array.from(files).forEach(file => {
-                const extension = '.' + file.name.split('.').pop().toLowerCase();
-                if (validExtensions.includes(extension)) {
-                    if (!selectedFiles.find(f => f.name === file.name)) {
-                        selectedFiles.push(file);
-                    }
-                }
-            });
+    <div class="chips">
+      <span class="chip" onclick="chip(this)">Re-check compaction requirements</span>
+      <span class="chip" onclick="chip(this)">Find all concrete testing frequencies</span>
+      <span class="chip" onclick="chip(this)">Update pavement square footage</span>
+      <span class="chip" onclick="chip(this)">Add missing utility backfill data</span>
+      <span class="chip" onclick="chip(this)">Check lot size conversion to sqft</span>
+      <span class="chip" onclick="chip(this)">List all special inspections found</span>
+    </div>
 
-            updateFileList();
-            generateBtn.disabled = selectedFiles.length === 0;
-        }
+    <div id="chatMessages"></div>
 
-        function updateFileList() {
-            fileList.innerHTML = '';
-            
-            selectedFiles.forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.innerHTML = `
-                    <span class="file-item-name">${file.name}</span>
-                    <button type="button" class="file-item-remove" onclick="removeFile(${index})">Remove</button>
-                `;
-                fileList.appendChild(fileItem);
-            });
-        }
+    <div class="chat-row">
+      <textarea id="chatInput" rows="2"
+        placeholder="e.g. The compaction requirement for select fill should be 95% per ASTM D698, not 90%…"></textarea>
+      <button class="btn btn-accent" id="sendBtn" onclick="sendRefinement()" style="align-self:flex-end">
+        Send
+      </button>
+    </div>
+  </div>
 
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            updateFileList();
-            generateBtn.disabled = selectedFiles.length === 0;
-        }
+  <!-- Download -->
+  <div id="downloadSection">
+    <div class="dl-card">
+      <div class="dl-icon">📊</div>
+      <div class="dl-info">
+        <h3>Your Excel Report is Ready</h3>
+        <p id="dlFilename">Inspection_Testing_Summary.xlsx</p>
+        <button class="btn btn-accent" onclick="downloadExcel()">
+          ⬇ Download Excel
+        </button>
+      </div>
+    </div>
+  </div>
 
-        // Form submission
-        bidForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const projectName = document.getElementById('projectName').value;
-            
-            // Hide messages
-            successMessage.classList.remove('active');
-            errorMessage.classList.remove('active');
-            
-            // Show loader
-            loader.classList.add('active');
-            generateBtn.disabled = true;
-            
-            try {
-                const formData = new FormData();
-                formData.append('project_name', projectName);
-                
-                selectedFiles.forEach(file => {
-                    formData.append('files', file);
-                });
+</main>
 
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    body: formData
-                });
+<script>
+const API = 'https://northlake-bid-api-g6amfyhed4gucyff.canadacentral-01.azurewebsites.net';
+const V2  = API + '/generate-bid-excel-v2';
+const REF = API + '/refine-extraction';
 
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
+let selectedFiles      = [];
+let currentExtraction  = null;
+let documentContext    = '';
+let chatHistory        = [];
+let refinementsUsed    = 0;
+let currentExcelB64    = '';
+let currentFilename    = '';
 
-                // Download the file
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${projectName.replace(/ /g, '_')}_Bid_Tables.xlsx`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
+// ── API health check ──────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch(API + '/health', { signal: AbortSignal.timeout(6000) });
+    const j = await r.json();
+    if (j.ok) {
+      document.getElementById('statusDot').style.background = '#2ecc71';
+      document.getElementById('statusText').textContent = 'API Online';
+    }
+  } catch {
+    document.getElementById('statusDot').style.background = '#e74c3c';
+    document.getElementById('statusText').textContent = 'API Offline';
+  }
+}
+checkHealth();
 
-                // Show success
-                loader.classList.remove('active');
-                successMessage.classList.add('active');
-                
-                // Reset after 3 seconds
-                setTimeout(() => {
-                    selectedFiles = [];
-                    updateFileList();
-                    generateBtn.disabled = true;
-                    successMessage.classList.remove('active');
-                }, 3000);
+// ── File handling ─────────────────────────────────────────────────────────
+const uploadArea = document.getElementById('uploadArea');
+const fileInput  = document.getElementById('fileInput');
 
-            } catch (error) {
-                loader.classList.remove('active');
-                errorMessage.textContent = `❌ Error: ${error.message}`;
-                errorMessage.classList.add('active');
-                generateBtn.disabled = false;
-            }
-        });
-    </script>
+uploadArea.addEventListener('click',     () => fileInput.click());
+uploadArea.addEventListener('dragover',  e  => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', ()  => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  addFiles([...e.dataTransfer.files]);
+});
+fileInput.addEventListener('change', () => addFiles([...fileInput.files]));
+
+function addFiles(files) {
+  const valid = ['.pdf','.docx','.txt'];
+  files.forEach(f => {
+    const ext = '.' + f.name.split('.').pop().toLowerCase();
+    if (valid.includes(ext) && !selectedFiles.find(x => x.name === f.name))
+      selectedFiles.push(f);
+  });
+  renderFiles();
+}
+
+function renderFiles() {
+  const fl = document.getElementById('fileList');
+  fl.innerHTML = '';
+  selectedFiles.forEach((f, i) => {
+    const d = document.createElement('div');
+    d.className = 'file-item';
+    d.innerHTML = `
+      <span class="file-item-name">📄 ${f.name}</span>
+      <span style="color:var(--muted);font-size:.78rem;flex-shrink:0">${(f.size/1024).toFixed(0)} KB</span>
+      <button class="file-item-remove" onclick="removeFile(${i})">Remove</button>`;
+    fl.appendChild(d);
+  });
+  document.getElementById('generateBtn').disabled = selectedFiles.length === 0;
+}
+
+function removeFile(i) {
+  selectedFiles.splice(i, 1);
+  renderFiles();
+}
+
+function clearAll() {
+  selectedFiles = []; renderFiles();
+  currentExtraction = null; documentContext = '';
+  chatHistory = []; refinementsUsed = 0;
+  currentExcelB64 = ''; currentFilename = '';
+  document.getElementById('chatSection').style.display     = 'none';
+  document.getElementById('downloadSection').style.display = 'none';
+  document.getElementById('chatMessages').innerHTML        = '';
+  hideBanner(); hideProgress();
+  document.getElementById('loader').classList.remove('active');
+}
+
+// ── Progress / banners ────────────────────────────────────────────────────
+function showProgress(label, pct) {
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('progressLabel').textContent  = label;
+  document.getElementById('progFill').style.width       = pct + '%';
+}
+function hideProgress() { document.getElementById('progressWrap').style.display = 'none'; }
+
+function showBanner(type, msg) {
+  const b = document.getElementById('statusBanner');
+  b.className = 'banner ' + type;
+  b.textContent = msg;
+}
+function hideBanner() { document.getElementById('statusBanner').className = 'banner'; }
+
+// ── Generate ──────────────────────────────────────────────────────────────
+async function handleGenerate() {
+  if (!selectedFiles.length) return;
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Processing…';
+
+  hideBanner(); hideProgress();
+  const loader = document.getElementById('loader');
+  loader.classList.add('active');
+  document.getElementById('loaderText').textContent =
+    'Analysing documents across all 10 tables… this may take 1–2 minutes.';
+
+  const fd = new FormData();
+  fd.append('project_name', document.getElementById('projectName').value || 'Northlake Project');
+  selectedFiles.forEach(f => fd.append('files', f));
+
+  try {
+    const resp = await fetch(V2, { method: 'POST', body: fd });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || `Server error ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    currentExtraction = data.extraction;
+    documentContext   = data.document_context;
+    currentExcelB64   = data.excel_base64;
+    currentFilename   = data.filename;
+    chatHistory       = [];
+    refinementsUsed   = 0;
+
+    loader.classList.remove('active');
+    showBanner('success', '✓ All 10 tables extracted. Download your report or refine below.');
+    showDownload(data.filename);
+    openChat();
+
+  } catch (e) {
+    loader.classList.remove('active');
+    showBanner('error', '❌ Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Generate Report';
+    document.getElementById('generateBtn').disabled = selectedFiles.length === 0;
+  }
+}
+
+// ── Download ──────────────────────────────────────────────────────────────
+function showDownload(filename) {
+  document.getElementById('downloadSection').style.display = 'block';
+  document.getElementById('dlFilename').textContent = filename;
+}
+
+function downloadExcel() {
+  if (!currentExcelB64) return;
+  const bytes = atob(currentExcelB64);
+  const arr   = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  const blob = new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const a    = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: currentFilename || 'Inspection_Testing_Summary.xlsx'
+  });
+  a.click();
+}
+
+// ── Chat refinement ───────────────────────────────────────────────────────
+function openChat() {
+  document.getElementById('chatSection').style.display = 'block';
+  updateBadge();
+  if (!chatHistory.length) {
+    appendMsg('ai',
+      'Extraction complete across all 10 tables. ' +
+      'Tell me anything to fix — compaction values, missing quantities, incorrect elements, etc. ' +
+      'I\'ll update the data and regenerate your Excel file.'
+    );
+  }
+  document.getElementById('chatSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function chip(el) {
+  document.getElementById('chatInput').value = el.textContent.trim();
+  document.getElementById('chatInput').focus();
+}
+
+function appendMsg(role, text) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + role;
+  d.innerHTML = `<div class="lbl">${role === 'user' ? 'You' : 'AI'}</div>${esc(text)}`;
+  document.getElementById('chatMessages').appendChild(d);
+  d.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function updateBadge() {
+  const rem   = 3 - refinementsUsed;
+  const badge = document.getElementById('refBadge');
+  badge.textContent = rem + ' refinement' + (rem !== 1 ? 's' : '') + ' remaining';
+  badge.className   = 'ref-badge' + (rem <= 1 ? ' low' : '');
+  const disabled    = rem <= 0;
+  document.getElementById('chatInput').disabled = disabled;
+  document.getElementById('sendBtn').disabled   = disabled;
+  if (disabled) {
+    document.getElementById('chatInput').placeholder =
+      'Maximum refinements reached. Download your report or start over.';
+  }
+}
+
+async function sendRefinement() {
+  const msg = document.getElementById('chatInput').value.trim();
+  if (!msg || refinementsUsed >= 3) return;
+
+  appendMsg('user', msg);
+  chatHistory.push({ role: 'user', content: msg });
+  document.getElementById('chatInput').value = '';
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>';
+
+  try {
+    const payload = {
+      project_name:         document.getElementById('projectName').value,
+      document_context:     documentContext,
+      current_extraction:   currentExtraction,
+      conversation_history: chatHistory.slice(0, -1),
+      user_message:         msg,
+    };
+
+    const resp = await fetch(REF, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || `Server error ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    currentExtraction = data.extraction;
+    currentExcelB64   = data.excel_base64;
+    refinementsUsed   = data.refinements_used;
+
+    chatHistory.push({ role: 'assistant', content: `Updated. ${data.refinements_remaining} refinement(s) left.` });
+    appendMsg('ai',
+      `Done! Extraction updated and Excel regenerated. ` +
+      `${data.refinements_remaining} refinement(s) remaining.`
+    );
+
+    showDownload(currentFilename);
+    updateBadge();
+
+  } catch (e) {
+    appendMsg('ai', '❌ Error: ' + e.message);
+    chatHistory.pop();
+  } finally {
+    btn.disabled = refinementsUsed >= 3;
+    btn.innerHTML = 'Send';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('chatInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendRefinement(); }
+  });
+});
+</script>
 </body>
 </html>
