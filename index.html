@@ -42,22 +42,14 @@
     border-right: 1px solid rgba(255,255,255,.15);
     padding-right: 20px;
   }
-  /* Logo image — swap src to your actual logo file path */
   .logo-wrap img {
-    height: 42px;
-    width: auto;
+    height: 42px; width: auto;
     object-fit: contain;
-    mix-blend-mode: screen; /* removes black background, keeps orange + text colors */
+    mix-blend-mode: screen;
   }
-  /* Fallback text logo shown if image fails */
-  .logo-text {
-    display: none;
-    flex-direction: column;
-    line-height: 1.1;
-  }
+  .logo-text { display: none; flex-direction: column; line-height: 1.1; }
   .logo-text .top { color: #fff; font-size: 1.25rem; font-weight: 800; letter-spacing: .02em; }
   .logo-text .bot { color: var(--orange); font-size: .65rem; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; }
-  .header-divider { flex: 0 0 1px; }
   .header-info h1 { color: #fff; font-size: 1rem; font-weight: 600; }
   .header-info p  { color: #8aaabf; font-size: .75rem; margin-top: 2px; }
   .api-status {
@@ -91,7 +83,15 @@
   }
 
   /* ── Fields ── */
-  label { display: block; font-size: .8rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; letter-spacing: .03em; text-transform: uppercase; }
+  label {
+    display: block; font-size: .8rem; font-weight: 600;
+    color: var(--muted); margin-bottom: 6px;
+    letter-spacing: .03em; text-transform: uppercase;
+  }
+  .optional-tag {
+    font-size: .68rem; font-weight: 500; color: #a0aec0;
+    text-transform: none; letter-spacing: 0; margin-left: 6px;
+  }
   input[type="text"] {
     width: 100%; padding: 11px 14px;
     border: 1.5px solid var(--border); border-radius: 8px;
@@ -100,6 +100,28 @@
   }
   input[type="text"]:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(212,114,26,.1); }
 
+  /* ── 2-column field grid ── */
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 18px;
+    margin-bottom: 18px;
+  }
+  .field-grid .full { grid-column: 1 / -1; }
+  @media (max-width: 520px) { .field-grid { grid-template-columns: 1fr; } .field-grid .full { grid-column: 1; } }
+
+  .field-group { display: flex; flex-direction: column; }
+
+  /* ── Section divider inside card ── */
+  .section-divider {
+    font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 16px; margin: 18px 0 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
   /* ── Drop Zone ── */
   #uploadArea {
     border: 2.5px dashed var(--border);
@@ -107,11 +129,8 @@
     text-align: center; cursor: pointer;
     background: #fafbfc;
     transition: border-color .2s, background .2s;
-    margin-top: 18px;
   }
-  #uploadArea:hover, #uploadArea.dragover {
-    border-color: var(--orange); background: #fdf4eb;
-  }
+  #uploadArea:hover, #uploadArea.dragover { border-color: var(--orange); background: #fdf4eb; }
   #uploadArea .icon { font-size: 40px; margin-bottom: 12px; }
   #uploadArea p { color: var(--muted); font-size: .93rem; }
   #uploadArea strong { color: var(--navy); }
@@ -231,7 +250,6 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Loader (original style, kept) ── */
   .loader { display: none; text-align: center; margin-top: 20px; }
   .loader.active { display: block; }
   .spinner-lg {
@@ -246,7 +264,6 @@
 
 <header>
   <div class="logo-wrap">
-    <!-- Save your logo as paige-logo.png next to index.html -->
     <img src="paige-logo.png" alt="Paige Engineering"
          onerror="this.style.display='none'; document.querySelector('.logo-text').style.display='flex'"/>
     <div class="logo-text">
@@ -268,12 +285,37 @@
 
   <!-- Upload Card -->
   <div class="card">
-    <div class="card-title">📁 Upload Bid Documents</div>
+    <div class="card-title">📋 Project & Contact Information</div>
 
-    <div>
-      <label for="projectName">Project Name</label>
-      <input type="text" id="projectName" value="Northlake Project" placeholder="e.g. 7-Eleven Westfield"/>
+    <div class="field-grid">
+      <!-- Row 1: Project Name (full width) -->
+      <div class="field-group full">
+        <label for="projectName">Project Name</label>
+        <input type="text" id="projectName" value="" placeholder="e.g. 7-Eleven Westfield — Northlake"/>
+      </div>
+
+      <!-- Row 2: Name + Company -->
+      <div class="field-group">
+        <label for="userName">Your Name <span class="optional-tag">(optional)</span></label>
+        <input type="text" id="userName" placeholder="e.g. Herman G. Lehman IV, PE"/>
+      </div>
+      <div class="field-group">
+        <label for="userCompany">Company <span class="optional-tag">(optional)</span></label>
+        <input type="text" id="userCompany" placeholder="e.g. Paige Engineering, LLC"/>
+      </div>
+
+      <!-- Row 3: Phone + Email -->
+      <div class="field-group">
+        <label for="userPhone">Phone <span class="optional-tag">(optional)</span></label>
+        <input type="text" id="userPhone" placeholder="e.g. 210-287-1300"/>
+      </div>
+      <div class="field-group">
+        <label for="userEmail">Email <span class="optional-tag">(optional)</span></label>
+        <input type="text" id="userEmail" placeholder="e.g. herman@paigeeng.com"/>
+      </div>
     </div>
+
+    <div class="section-divider">📁 Upload Documents</div>
 
     <div id="uploadArea">
       <div class="icon">📂</div>
@@ -319,7 +361,9 @@
       <span class="chip" onclick="chip(this)">Update pavement square footage</span>
       <span class="chip" onclick="chip(this)">Add missing utility backfill data</span>
       <span class="chip" onclick="chip(this)">Check lot size conversion to sqft</span>
-      <span class="chip" onclick="chip(this)">List all special inspections found</span>
+      <span class="chip" onclick="chip(this)">Re-check structural member sizes</span>
+      <span class="chip" onclick="chip(this)">Find all special inspections</span>
+      <span class="chip" onclick="chip(this)">Update drilled shaft count</span>
     </div>
 
     <div id="chatMessages"></div>
@@ -354,13 +398,13 @@ const API = 'https://northlake-bid-api-g6amfyhed4gucyff.canadacentral-01.azurewe
 const V2  = API + '/generate-bid-excel-v2';
 const REF = API + '/refine-extraction';
 
-let selectedFiles      = [];
-let currentExtraction  = null;
-let documentContext    = '';
-let chatHistory        = [];
-let refinementsUsed    = 0;
-let currentExcelB64    = '';
-let currentFilename    = '';
+let selectedFiles     = [];
+let currentExtraction = null;
+let documentContext   = '';
+let chatHistory       = [];
+let refinementsUsed   = 0;
+let currentExcelB64   = '';
+let currentFilename   = '';
 
 // ── API health check ──────────────────────────────────────────────────────
 async function checkHealth() {
@@ -461,10 +505,15 @@ async function handleGenerate() {
   const loader = document.getElementById('loader');
   loader.classList.add('active');
   document.getElementById('loaderText').textContent =
-    'Analysing documents across all 10 tables… this may take 1–2 minutes.';
+    'Running Cover Page + Geotechnical + Flatwork/Foundation + Structural + Quantity Estimation… this may take 1–2 minutes.';
 
+  // ── Build FormData with user info fields ──────────────────────────────
   const fd = new FormData();
-  fd.append('project_name', document.getElementById('projectName').value || 'Northlake Project');
+  fd.append('project_name',  document.getElementById('projectName').value.trim()  || 'Northlake Project');
+  fd.append('user_name',     document.getElementById('userName').value.trim());
+  fd.append('user_company',  document.getElementById('userCompany').value.trim());
+  fd.append('user_phone',    document.getElementById('userPhone').value.trim());
+  fd.append('user_email',    document.getElementById('userEmail').value.trim());
   selectedFiles.forEach(f => fd.append('files', f));
 
   try {
@@ -483,7 +532,7 @@ async function handleGenerate() {
     refinementsUsed   = 0;
 
     loader.classList.remove('active');
-    showBanner('success', '✓ All 10 tables extracted. Download your report or refine below.');
+    showBanner('success', '✓ Cover Page + Tables 1–3 + Quantity Estimation extracted. Download your report or refine below.');
     showDownload(data.filename);
     openChat();
 
@@ -522,8 +571,8 @@ function openChat() {
   updateBadge();
   if (!chatHistory.length) {
     appendMsg('ai',
-      'Extraction complete across all 10 tables. ' +
-      'Tell me anything to fix — compaction values, missing quantities, incorrect elements, etc. ' +
+      'Extraction complete — Cover Page, Geotechnical, Flatwork/Foundation, Structural, and Quantity Estimation tables are ready. ' +
+      'Tell me anything to fix — compaction values, missing quantities, incorrect elements, rebar details, etc. ' +
       'I\'ll update the data and regenerate your Excel file.'
     );
   }
