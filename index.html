@@ -288,13 +288,10 @@
     <div class="card-title">📋 Project & Contact Information</div>
 
     <div class="field-grid">
-      <!-- Row 1: Project Name (full width) -->
       <div class="field-group full">
         <label for="projectName">Project Name</label>
         <input type="text" id="projectName" value="" placeholder="e.g. 7-Eleven Westfield — Northlake"/>
       </div>
-
-      <!-- Row 2: Name + Company -->
       <div class="field-group">
         <label for="userName">Your Name <span class="optional-tag">(optional)</span></label>
         <input type="text" id="userName" placeholder="e.g. Herman G. Lehman IV, PE"/>
@@ -303,8 +300,6 @@
         <label for="userCompany">Company <span class="optional-tag">(optional)</span></label>
         <input type="text" id="userCompany" placeholder="e.g. Paige Engineering, LLC"/>
       </div>
-
-      <!-- Row 3: Phone + Email -->
       <div class="field-group">
         <label for="userPhone">Phone <span class="optional-tag">(optional)</span></label>
         <input type="text" id="userPhone" placeholder="e.g. 210-287-1300"/>
@@ -334,7 +329,7 @@
 
     <div class="loader" id="loader">
       <div class="spinner-lg"></div>
-      <p id="loaderText">Processing your documents… This may take a minute.</p>
+      <p id="loaderText">Processing your documents… This may take a few minutes.</p>
     </div>
 
     <div class="btn-row">
@@ -395,6 +390,7 @@
 
 <script>
 const API = 'https://northlake-bid-api-g6amfyhed4gucyff.canadacentral-01.azurewebsites.net';
+// const API = 'http://localhost:8000';
 const V2  = API + '/generate-bid-excel-v2';
 const REF = API + '/refine-extraction';
 
@@ -405,6 +401,7 @@ let chatHistory       = [];
 let refinementsUsed   = 0;
 let currentExcelB64   = '';
 let currentFilename   = '';
+let _pollTimer        = null;  // holds the setInterval handle for job polling
 
 // ── API health check ──────────────────────────────────────────────────────
 async function checkHealth() {
@@ -467,6 +464,7 @@ function removeFile(i) {
 }
 
 function clearAll() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
   selectedFiles = []; renderFiles();
   currentExtraction = null; documentContext = '';
   chatHistory = []; refinementsUsed = 0;
@@ -493,21 +491,19 @@ function showBanner(type, msg) {
 }
 function hideBanner() { document.getElementById('statusBanner').className = 'banner'; }
 
-// ── Generate ──────────────────────────────────────────────────────────────
+// ── Generate — submits job, then polls ────────────────────────────────────
 async function handleGenerate() {
   if (!selectedFiles.length) return;
 
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> Processing…';
+  btn.innerHTML = '<span class="spin"></span> Uploading…';
 
   hideBanner(); hideProgress();
   const loader = document.getElementById('loader');
   loader.classList.add('active');
-  document.getElementById('loaderText').textContent =
-    'Running Cover Page + Geotechnical + Flatwork/Foundation + Structural + Quantity Estimation… this may take 1–2 minutes.';
+  document.getElementById('loaderText').textContent = 'Uploading documents…';
 
-  // ── Build FormData with user info fields ──────────────────────────────
   const fd = new FormData();
   fd.append('project_name',  document.getElementById('projectName').value.trim()  || 'Northlake Project');
   fd.append('user_name',     document.getElementById('userName').value.trim());
@@ -517,32 +513,77 @@ async function handleGenerate() {
   selectedFiles.forEach(f => fd.append('files', f));
 
   try {
+    // POST returns instantly with job_id
     const resp = await fetch(V2, { method: 'POST', body: fd });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       throw new Error(err.detail || `Server error ${resp.status}`);
     }
+    const { job_id } = await resp.json();
 
-    const data = await resp.json();
-    currentExtraction = data.extraction;
-    documentContext   = data.document_context;
-    currentExcelB64   = data.excel_base64;
-    currentFilename   = data.filename;
-    chatHistory       = [];
-    refinementsUsed   = 0;
+    btn.innerHTML = '<span class="spin"></span> Processing…';
+    document.getElementById('loaderText').textContent = 'Job queued — starting OCR and extraction…';
+    showProgress('Job queued…', 5);
 
-    loader.classList.remove('active');
-    showBanner('success', '✓ Cover Page + Tables 1–3 + Quantity Estimation extracted. Download your report or refine below.');
-    showDownload(data.filename);
-    openChat();
+    // Start polling every 4 seconds
+    _pollTimer = setInterval(() => _pollJob(job_id, btn), 4000);
 
   } catch (e) {
     loader.classList.remove('active');
-    showBanner('error', '❌ Error: ' + e.message);
-  } finally {
+    showBanner('error', '❌ Upload failed: ' + e.message);
     btn.disabled = false;
     btn.innerHTML = '⚡ Generate Report';
     document.getElementById('generateBtn').disabled = selectedFiles.length === 0;
+  }
+}
+
+// ── Job polling ───────────────────────────────────────────────────────────
+async function _pollJob(job_id, btn) {
+  try {
+    const r = await fetch(API + '/job/' + job_id);
+    if (!r.ok) return; // transient network issue — keep polling
+
+    const job = await r.json();
+
+    // Update progress bar and loader text
+    showProgress(job.message, job.progress);
+    document.getElementById('loaderText').textContent = job.message;
+
+    if (job.status === 'done') {
+      clearInterval(_pollTimer); _pollTimer = null;
+
+      const data = job.result;
+      currentExtraction = data.extraction;
+      documentContext   = data.document_context;
+      currentExcelB64   = data.excel_base64;
+      currentFilename   = data.filename;
+      chatHistory       = [];
+      refinementsUsed   = 0;
+
+      document.getElementById('loader').classList.remove('active');
+      showBanner('success', '✓ Cover Page + Tables 1–3 + Quantity Estimation extracted. Download your report or refine below.');
+      showDownload(data.filename);
+      openChat();
+
+      btn.disabled = false;
+      btn.innerHTML = '⚡ Generate Report';
+      document.getElementById('generateBtn').disabled = selectedFiles.length === 0;
+    }
+
+    if (job.status === 'failed') {
+      clearInterval(_pollTimer); _pollTimer = null;
+
+      document.getElementById('loader').classList.remove('active');
+      showBanner('error', '❌ ' + (job.error || 'Extraction failed'));
+
+      btn.disabled = false;
+      btn.innerHTML = '⚡ Generate Report';
+      document.getElementById('generateBtn').disabled = selectedFiles.length === 0;
+    }
+
+  } catch (e) {
+    // Network error during polling — just keep polling, don't crash
+    console.warn('Poll error:', e);
   }
 }
 
